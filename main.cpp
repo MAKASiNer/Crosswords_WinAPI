@@ -114,6 +114,7 @@ public:
 
         hEdtTable = tb.hEdtTable;
 
+        records = tb.records;
         rightTable = tb.rightTable;
         table = tb.table;
 
@@ -630,6 +631,7 @@ LONG WINAPI WndProc(HWND hwnd, UINT Message,
                 // перерегистрация
                 lockTimer = false;
                 table = Table(table.LoadCrosswordFromFile(selectedCrossword));
+                table.loadRecordTable(selectedCrossword);
                 WndReg(hwnd, hInst);
                 SetWindowText(table.hPlayerName, wbuf.c_str());
             };
