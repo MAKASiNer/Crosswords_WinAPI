@@ -8,15 +8,15 @@
 #include "Table.h"
 
 
-// hMenu органов управелния
+// hMenu органів управелнія 
 #define CROSSWORD_INPUTBOX 5
 #define RESTART_BUT 6
 
 
-// глобальное игровое поле
+// глобальне ігрове поле 
 Table table(std::vector<Word>(0));
 
-// функция создания шрифта Arial с размером h
+// функція створення шрифту Arial з розміром х 
 HFONT myFont(UINT h) {
     LOGFONT lf;
     memset(&lf, 0, sizeof(LOGFONT));
@@ -28,7 +28,7 @@ HFONT myFont(UINT h) {
     return font;
 }
 
-// эта функция делит строку на подстроки по символам разделителям и записывает их в вектор
+// ця функція ділить рядок на подстроки по символам розділювачам і записує їх в вектор 
 std::vector<std::wstring> sepWstring(const std::wstring& wstring, TCHAR separator) {
     std::vector<std::wstring> res;
     res.reserve(wstring.length());
@@ -36,12 +36,12 @@ std::vector<std::wstring> sepWstring(const std::wstring& wstring, TCHAR separato
     buf.reserve(wstring.length());
 
     for (auto& lit : wstring) {
-        // если символ равен разделителю, то буффер помещается в результирующий вектор
+        // якщо символ дорівнює разделителю, то буфер поміщається в результуючий вектор 
         if (lit == separator) {
             res.push_back(buf);
             buf.clear();
         }
-        // иначе продолжается заполнение буффера
+        // інакше триває заповнення буфера 
         else buf += lit;
     }
     if (not buf.empty()) res.push_back(buf);
@@ -49,47 +49,47 @@ std::vector<std::wstring> sepWstring(const std::wstring& wstring, TCHAR separato
 }
 
 
-// \brief Регистрация окон
-// \param hwnd дискриптор главного окна
-// \param hInst дискриптор приложения 
+// \brief Реєстрація вікон 
+// ЕПАР hwnd дескриптор головного вікна 
+// ЕПАР hInst дескриптор додатки 
 LONG WINAPI WndReg(HWND hwnd, HINSTANCE hInst) {
-    // вспомогательные переменные
+    // допоміжні змінні 
     RECT rect;
     UINT x(0), y(0);
     
-    static std::wstring wbuf; // строковый буффер
+    static std::wstring wbuf; // строковий буфер 
 
-    // шрифт
+    // шрифт 
     static HFONT norm_font = myFont(0.75 * table.tile);
 
-    // регистрация окон edit для кроссворда
+    // реєстрація вікон edit для кросворду 
     for (UINT y = 0; y < table.height; y++) {
         for (UINT x = 0; x < table.width; x++) {
             int i = y * table.width + x;
             auto& hEdt = table.hEdtTable[i];
             wchar_t lit = table.rightLetters[i];
 
-            // создается окно edit если в ячейка по координатам является частью слова
+            // створюється вікно edit якщо в комірка по координатам є частиною слова 
             if (lit == table.voidLit) continue;
             hEdt = CreateWindow(L"edit", NULL,
                 WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER | ES_UPPERCASE,
                 x * table.tile + table.shift_w, y * table.tile + table.shift_h, table.tile + 1, table.tile + 1,
                 hwnd, (HMENU)CROSSWORD_INPUTBOX, hInst, NULL
             );
-            // установка шрифта
+            // установка шрифту 
             SendMessage(hEdt, WM_SETFONT, (WPARAM)norm_font, NULL);
-            // задает размер буффера edit
+            // задає розмір буфера edit 
             SendMessage(hEdt, EM_LIMITTEXT, (WPARAM)1, NULL);
         }
     }
 
-    // задание области отрисовки кроссворда
+    // завдання області відтворення кросворду 
     x = table.inter_w + table.shift_w;
     y = table.shift_h * 2 + 8 * table.tile;
     if (table.inter_h < y) table.inter_h = y;
 
 
-    // регистрация окна имени игрока
+    // реєстрація вікна імені гравця 
     table.hPlayerName = CreateWindow(L"edit", NULL,
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER,
         x, table.shift_h + 2 * table.tile, (table.tile + 1) * 5, table.tile + 1,
@@ -97,14 +97,14 @@ LONG WINAPI WndReg(HWND hwnd, HINSTANCE hInst) {
     );
     SendMessage(table.hPlayerName, WM_SETFONT, (WPARAM)norm_font, NULL);
 
-    // регистрация списка кроссвордов
+    // реєстрація списку кросвордів 
     table.hCrosswords = CreateWindow(L"listbox", NULL,
         WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_STANDARD,
         x, table.shift_h + 4 * table.tile, (table.tile + 1) * 5, 3 * table.tile,
         hwnd, (HMENU)CROSSWORD_INPUTBOX, hInst, NULL);
     table.LoadCrosswordsList();
 
-    // регистрация кнопки рестарта
+    // реєстрація кнопки рестарту 
     table.hRestart = CreateWindow(L"button", NULL,
         WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
         x, table.shift_h + 6.5 * table.tile, (table.tile + 1) * 5, table.tile + 1,
@@ -114,38 +114,38 @@ LONG WINAPI WndReg(HWND hwnd, HINSTANCE hInst) {
 };
 
 
-// \brief Функция обработки сообщений
-// \param hwnd дискриптор главного окна
-// \param message сообщение 
-// \param wparam и lparam параметры обмена информацией
+// \brief функція обробки повідомлень 
+// ЕПАР hwnd дескриптор головного вікна 
+// ЕПАР message повідомлення 
+// ЕПАР wparam і lparam параметри обміну інформацією 
 LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
-    // вспомогательный переменные
-    UINT x(0), y(0);        // координаты
-    RECT rect;              // область
+    // допоміжний змінні 
+    UINT x(0), y(0);        // координати 
+    RECT rect;              // область 
 
     static HINSTANCE hInst;
-    static TCHAR buf[32];            // буффер
-    static std::wstring wbuf;        // строковый буффер
+    static TCHAR buf[32];            // буфер 
+    static std::wstring wbuf;        // строковий буфер 
 
-    static std::wstring selectedCrossword;    // выбранный кроссворд (в listbox)
+    static std::wstring selectedCrossword;    // обраний кросворд (в listbox) 
 
-    // шрифты для номеров слов, для кроссворда, для остального текста
+    // шрифти для номерів слів, для кросворду, для решти тексту 
     static HFONT
         big_font = myFont(table.tile),
         norm_font = myFont(0.75 * table.tile),
         small_font = myFont(table.tile / 2);
 
-    // таймер
+    // таймер 
     static SYSTEMTIME timer;
     static bool lockTimer = true;
 
-    // скроллинг
+    // скролінг 
     static bool scrollLock(false);
 
-    // обработка сообщений
+    // обробка повідомлень 
     switch (message) {
 
-    // первичное создание окон
+    // первинне створення вікон 
     case WM_CREATE:
     {
         hInst = ((LPCREATESTRUCT)lparam)->hInstance;
@@ -155,16 +155,16 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
     }
     break;
 
-    // настройка цвета текста и заднего фона edit-ов кроссворда
+    // налаштування кольору тексту і заднього фону edit-ів кросворду 
     case WM_CTLCOLOREDIT:
     {
-        // если отправитель - поле кроссворда
+        // якщо відправник - поле кросворду 
         auto iter = std::find(table.hEdtTable.begin(), table.hEdtTable.end(), (HWND)lparam);
         if (iter != table.hEdtTable.end()) {
             int i = iter - table.hEdtTable.begin();
             HWND hEdt = table.hEdtTable[i];
 
-            // закрашиваются те, которые составляют вместе с отправителем единое слово
+            // закрашуються ті, які складають разом з відправником єдине слово 
             auto words = table.FindWords(i % table.width, i / table.width);
             for (auto word : words) {
                 if (table.CheckWord(word) == 2) {
@@ -172,16 +172,16 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
                     break;
                 } else SetTextColor((HDC)wparam, RGB(0, 0, 0));
             }
-            // закрашивает фон
+            // зафарбовує фон 
             SetBkColor((HDC)wparam, RGB(230, 230, 230));
         }
     }
     return (INT_PTR)GetStockObject(NULL_BRUSH);
 
-    // сообщение от таймера
+    // повідомлення від таймера 
     case WM_TIMER:
     {
-        // если счетчик не залочен, то идет отсчет времени
+        // якщо лічильник НЕ залочений, то йде відлік часу 
         if (lockTimer) return NULL;
         GetSystemTime(&timer);
         if (table.seconds >= 59) {
@@ -190,7 +190,7 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
         }
         else table.seconds++;
 
-        // перерисовка области таймера
+        // перерисовка області таймера 
         rect.left = table.shift_w * 2 + table.width * table.tile;
         rect.top = table.shift_h;
         rect.right = rect.left + 5 * table.tile;
@@ -199,21 +199,21 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
     }
     break;
 
-    // ивенты от органов управления
+    // івенти від органів управління 
     case WM_COMMAND:
     {
-        // ивент от кнопки рестарта
+        // івент від кнопки рестарту 
         if (wparam == RESTART_BUT) {
-            // буферизация имени игрока
+            // буферизация імені гравця 
             if (GetWindowText(table.hPlayerName, buf, 10)) wbuf = buf;
             else wbuf = L"Noname";
 
-            // если выбран какой-нибудь кроссворд
+            // якщо обраний який-небудь кросворд 
             if (selectedCrossword.size()) {
-                // обновление главного кроссворда и таблицы рекордов
+                // оновлення головного кросворду і таблиці рекордів 
                 table = Table(table.LoadCrosswordFromFile(selectedCrossword));
                 table.loadRecordTable(selectedCrossword);
-                // перерегистрация окон
+                // перереєстрація вікон 
                 WndReg(hwnd, hInst);
                 SetWindowText(table.hPlayerName, wbuf.c_str());
                 lockTimer = false;
@@ -223,7 +223,7 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
             return NULL;
         }
 
-        // ивент выбора кроссворда 
+        // івент вибору кросворду 
         if (HIWORD(wparam) == LBN_SELCHANGE) {
             SendMessage(table.hCrosswords, LB_GETTEXT,
                 (INT)SendMessage(table.hCrosswords, LB_GETCURSEL, NULL, NULL), (LPARAM)buf);
@@ -232,15 +232,15 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
         }
 
 
-        // если ивент от edit окон кроссворда
-        // wparam & CROSSWORD_INPUTBOX == CROSSWORD_INPUTBOX
+        // якщо івент від edit вікон кросворду 
+        // wparam & CROSSWORD_INPUTBOX == CROSSWORD_INPUTBOX 
         bool needRedraw(false);
         for (UINT y = 0; y < table.height; y++) {
             for (UINT x = 0; x < table.width; x++) {
                 int i = y * table.width + x;
                 auto& hEdt = table.hEdtTable[i];
                 GetWindowText(hEdt, buf, 2);
-                // при этом содержание edit изменилось
+                // при цьому зміст edit змінилося 
                 if (buf[0] != table.userLetters[i]) {
                     if (buf[0] == 0) table.userLetters[i] = table.voidLit;
                     else table.userLetters[i] = buf[0];
@@ -248,7 +248,7 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
                 }
             }
         }
-        // перерисовка кроссворда
+        // перерисовка кросворду 
         if (needRedraw) {
             needRedraw = false;
             rect.left = 0;
@@ -257,19 +257,19 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
             rect.bottom = rect.top + table.tile * table.height;
             InvalidateRect(hwnd, NULL, false);
 
-            // если игрок победил
+            // якщо гравець переміг 
             if (table.CheckWin()) {
                 if (not lockTimer) {
                     lockTimer = true;
-                    // происходит запись рекорда
+                    // відбувається запис рекорду 
                     if (GetWindowText(table.hPlayerName, buf, 10)) wbuf = buf;
                     else wbuf = L"Noname";
                     table.loadRecordTable(
                         selectedCrossword, wbuf,
                         table.minutes * 60 + table.seconds);
                     InvalidateRect(hwnd, NULL, true);
-                    // и выскакивает диалоговое окно
-                    MessageBox(hwnd, L"Поздравляю, вы победили!", L"", MB_OK);
+                    // і вискакує діалогове вікно 
+                    MessageBox(hwnd, L"Вітаю, ви перемогли!", L"", MB_OK);
                 }
             }
             else InvalidateRect(hwnd, NULL, false);
@@ -277,18 +277,18 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
     }
     break;
 
-    // ивенты колесика мышки
+    // івенти коліщатка мишки 
     case WM_MOUSEWHEEL:
     {
-        // нормализация прокрутки по table.tile
+        // нормалізація прокрутки по table.tile 
         INT scrollDelta = table.tile * (GET_WHEEL_DELTA_WPARAM(wparam) / abs(GET_WHEEL_DELTA_WPARAM(wparam)));
-        // ограничений прокрутки
+        // обмежень прокрутки 
         if (scrollDelta > 0) {
             if (scrollDelta + table.scroll_h > 0) table.scroll_h = 0;
             else table.scroll_h += scrollDelta;
         }
         else if (not scrollLock) table.scroll_h += scrollDelta;
-        // отрисовка области с описанием слов
+        // отрисовка області з описом слів 
         GetClientRect(hwnd, &rect);
         rect.left = table.shift_w;
         rect.top = table.inter_h + 1;
@@ -296,21 +296,21 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
     }
     break;
 
-    // отрисовка номеров слов, вопросов, таймера и т.п.
+    // отрисовка номерів слів, питань, таймера і т.п. 
     case WM_PAINT:
     {
-        // область рисования
+        // область малювання 
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        // установка маленького шрифта и отрисовка номеров слов
+        // установка маленького шрифту і отрисовка номерів слів 
         SelectObject(hdc, small_font);
         for (UINT i = 0; i < table.wordlist.size(); i++) {
             wbuf = std::to_wstring(i + 1);
-            // вывод номера слова по соответствующим координатам
+            // висновок номера слова по відповідним координатам 
             if (table.wordlist[i].direction == HORIZONTAL) {
-                // высота с ростом длинны номера не меняется
-                // потому требуется выравнивание только по горизонтали
+                // висота з зростанням довжини номера НЕ змінюється 
+                // тому потрібно вирівнювання тільки по горизонталі 
                 if (wbuf.size() == 1)  x = (table.wordlist[i].x * table.tile - table.tile / 4 + table.shift_w);
                 else x = (table.wordlist[i].x * table.tile - table.tile / 2 + table.shift_w);
                 y = (table.wordlist[i].y * table.tile + table.shift_h + 2);
@@ -322,16 +322,16 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
             TextOut(hdc, x, y, wbuf.c_str(), wbuf.length());
         }
 
-        // установка большого шрифта
+        // установка великого шрифту 
         SelectObject(hdc, big_font);
 
-        // отрисовка таймера
+        // отрисовка таймера 
         x = table.inter_w + table.shift_w;
         y = table.shift_h;
         wbuf = std::to_wstring(table.minutes) + L":" + std::to_wstring(table.seconds);
         TextOut(hdc, x, y, wbuf.c_str(), wbuf.length());
 
-        // отрисовка таблицы рекордов
+        // отрисовка таблиці рекордів 
         x = table.inter_w + table.tile * 5 + 2 * table.shift_w;
         y = table.shift_h;
         for (int i = 0; i < 10; i++) {
@@ -344,11 +344,11 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
             }
         }
 
-        // отрисовка описание слов с учетом прокрутки
+        // отрисовка опис слів з урахуванням прокрутки 
         x = table.shift_w;
         y = table.inter_h + table.tile + table.scroll_h;
         if (y > table.inter_h) {
-            wbuf = L"По горизонтали:";
+            wbuf = L"По горизонталі:";
             TextOut(hdc, x, y, wbuf.c_str(), wbuf.length());
         }
         for (UINT i = 0; i < table.wordlist.size(); i++) {
@@ -365,7 +365,7 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
 
         y += table.shift_h;
         if (y > table.inter_h) {
-            wbuf = L"По вертикали:";
+            wbuf = L"По вертикалі:";
             TextOut(hdc, x, y, wbuf.c_str(), wbuf.length());
         }
         for (UINT i = 0; i < table.wordlist.size(); i++) {
@@ -380,14 +380,14 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
             }
         }
 
-        // если ниодного описания небыло отрисованно, то блокируется прокрутка вверх
+        // якщо ні одного опису не було отрисовать, то блокується прокрутка вгору 
         if (y < table.inter_h) scrollLock = true;
         else scrollLock = false;
         EndPaint(hwnd, &ps);
     }
     break;
 
-    // закрытие окна
+    // закриття вікна 
     case WM_DESTROY:
     {
         PostQuitMessage(0);
@@ -401,16 +401,16 @@ LONG WINAPI WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
 }
 
 
-// Стартовая функция
-// В ней проходит регистрация главного окна
-// А также в ней находися так называемый mainloop (главный цикл)
+// Стартова функція 
+// В ній проходить реєстрація головного вікна 
+// А також в ній знаходиться так званий mainloop (головний цикл) 
 INT  WINAPI  WinMain(HINSTANCE  hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow) {
-    // дискриптор, сообщение и шаблон главного окна
+    // дескриптор, повідомлення і шаблон головного вікна 
     HWND hwnd;
     MSG msg;
     WNDCLASS w;
 
-    // создание и регистрация класса 
+    // створення і реєстрація класу 
     memset(&w, 0, sizeof(WNDCLASS));
     w.style = CS_HREDRAW | CS_VREDRAW | CS_BYTEALIGNCLIENT;
     w.lpfnWndProc = WndProc;
@@ -419,7 +419,6 @@ INT  WINAPI  WinMain(HINSTANCE  hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmd
     w.lpszClassName = L"MainWindow";
     RegisterClass(&w);
 
-    // создание и регистрация основного окна
     hwnd = CreateWindow(L"MainWindow", L"Crossword",
         WS_OVERLAPPEDWINDOW,
         500, 300, 800, 600,
@@ -427,10 +426,8 @@ INT  WINAPI  WinMain(HINSTANCE  hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmd
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
-    // создание таймера с интервалом 1 секунда
     SetTimer(hwnd, NULL, 1000, NULL);
 
-    // главный цикл
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);

@@ -183,7 +183,7 @@ struct Table {
             std::wofstream(L"records/" + path);
         // если результат передан, то записывается в файл
         if (playerName.size() > 0) {
-            for (auto& lit : playerName) lit = table.TCHARtoANSI(lit);
+            for (auto& lit : playerName) lit = TCHARtoANSI(lit);
             std::wofstream(L"records/" + path, std::ios::app)
                 << std::to_wstring(playerSeconds) + L"\t" + playerName << std::endl;
         }
@@ -308,7 +308,8 @@ struct Table {
         { 242, 1090 }, { 243, 1091 }, { 244, 1092 }, { 245, 1093 },
         { 246, 1094 }, { 247, 1095 }, { 248, 1096 }, { 249, 1097 },
         { 250, 1098 }, { 251, 1099 }, { 252, 1100 }, { 253, 1101 },
-        { 254, 1102 }, { 255, 1103 }, {175, 1031}, {191, 1111}, {179, 1110}, };
+        { 254, 1102 }, { 255, 1103 }, {175, 1031}, {191, 1111},
+        {179, 1110}, { 170, 1028}, { 186, 1108} };
 
         if (alf.find(ansi_lit) != alf.end())return alf[ansi_lit];
         else return ansi_lit;
@@ -336,7 +337,8 @@ struct Table {
         { 1090 , 242 }, { 1091 , 243 }, { 1092 , 244 }, { 1093 , 245 },
         { 1094, 246 }, { 1095 , 247 },  { 1096 , 248 }, { 1097 , 249 },
         { 1098 , 250 }, { 1099 , 251 }, { 1100 , 252 }, { 1101 , 253 },
-        { 1102 , 254 }, { 1103 , 255 },  { 1031 , 175 }, { 1111 , 191 }, { 1110 , 179 } };
+        { 1102 , 254 }, { 1103 , 255 },  { 1031 , 175 }, { 1111 , 191 },
+        { 1110 , 179 }, { 1028, 170 }, {1108, 186 } };
 
         if (alf.find(tchar_lit) != alf.end())return alf[tchar_lit];
         else return tchar_lit;
